@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2iC Copilot Agents — Broker Onboarding</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --text-primary: #1a1917;
+    --text-secondary: #6b6a65;
+    --text-tertiary: #9c9a93;
+    --purple-50: #EEEDFE;
+    --purple-600: #534AB7;
+    --purple-800: #3C3489;
+    --teal-50: #E1F5EE;
+    --teal-600: #0F6E56;
+    --teal-800: #085041;
+    --green-50: #EAF3DE;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+    --amber-50: #FAEEDA;
+    --amber-600: #854F0B;
+    --amber-800: #633806;
+    --gray-50: #F1EFE8;
+    --gray-600: #5F5E5A;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; }
+
+  header { margin-bottom: 32px; }
+  .brand { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 8px; }
+  h1 { font-size: 26px; font-weight: 500; margin-bottom: 8px; line-height: 1.2; }
+  .subtitle { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 580px; }
+
+  /* progress bar */
+  .progress-wrap { margin-bottom: 28px; }
+  .progress-label { font-size: 11px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .progress-track { height: 3px; background: var(--border-mid); border-radius: 2px; }
+  .progress-fill { height: 3px; background: var(--purple-600); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-steps { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .prog-step { font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 0.5px solid var(--border-mid); color: var(--text-tertiary); font-family: 'DM Mono', monospace; transition: all 0.2s; }
+  .prog-step.done { background: var(--green-50); color: var(--green-800); border-color: var(--green-600); }
+  .prog-step.active { background: var(--purple-50); color: var(--purple-800); border-color: var(--purple-600); font-weight: 500; }
+
+  /* chat window */
+  .chat-window {
+    background: var(--surface);
+    border: 0.5px solid var(--border-mid);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .chat-header {
+    padding: 12px 18px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-header-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-600); }
+  .chat-header-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+  .chat-header-sub { font-size: 11px; color: var(--text-tertiary); margin-left: auto; font-family: 'DM Mono', monospace; }
+
+  .chat-body { padding: 20px 18px; min-height: 320px; }
+
+  .msg { margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
+  .msg.broker { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .av-agent  { background: var(--teal-50);   color: var(--teal-800);   border: 0.5px solid var(--teal-600); }
+  .av-broker { background: var(--purple-50); color: var(--purple-800); border: 0.5px solid var(--purple-600); }
+
+  .bubble {
+    font-size: 13px; line-height: 1.6;
+    padding: 10px 14px; border-radius: 12px;
+    max-width: 82%; white-space: pre-line;
+  }
+  .bubble-agent  { background: var(--bg); border: 0.5px solid var(--border); border-bottom-left-radius: 3px; color: var(--text-primary); }
+  .bubble-broker { background: var(--purple-50); border-bottom-right-radius: 3px; color: var(--purple-800); }
+
+  /* quick reply chips */
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; margin-left: 42px; }
+  .chip {
+    font-size: 12px; padding: 6px 13px; border-radius: 16px;
+    border: 0.5px solid var(--teal-600); background: var(--teal-50);
+    color: var(--teal-800); cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .chip:hover { background: var(--teal-600); color: white; }
+
+  /* save toast */
+  .save-toast {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--green-50); border: 0.5px solid var(--green-600);
+    border-radius: 8px; padding: 10px 14px; margin-top: 10px; margin-left: 42px;
+    font-size: 12px; color: var(--green-800); opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .save-toast.show { opacity: 1; }
+  .save-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-600); flex-shrink: 0; }
+
+  /* profile panel */
+  .profile-panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border-mid);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+
+  .profile-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .profile-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.07em; }
+  .profile-badge { font-size: 10px; font-family: 'DM Mono', monospace; padding: 3px 8px; border-radius: 10px; background: var(--amber-50); color: var(--amber-800); border: 0.5px solid var(--amber-600); }
+
+  .profile-items { display: flex; flex-direction: column; gap: 8px; }
+
+  .profile-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 12px; border-radius: 7px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.3s, transform 0.3s;
+    font-size: 12px;
+  }
+  .profile-item.visible { opacity: 1; transform: translateY(0); }
+  .profile-item-key { color: var(--text-tertiary); min-width: 130px; font-family: 'DM Mono', monospace; flex-shrink: 0; }
+  .profile-item-val { color: var(--text-primary); font-weight: 500; }
+
+  /* nav */
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 400;
+    padding: 8px 20px; border-radius: 8px;
+    border: 0.5px solid var(--border-mid);
+    background: var(--surface); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn:hover:not(:disabled) { background: var(--bg); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.primary { background: var(--purple-50); color: var(--purple-800); border-color: var(--purple-600); font-weight: 500; }
+  .nav-btn.primary:hover { background: var(--purple-600); color: white; }
+  .step-counter { font-size: 12px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-tertiary); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">2iC Copilot Agents — NxtWave Pilot</div>
+    <h1>Broker onboarding</h1>
+    <p class="subtitle">When a broker first joins, the Primary Agent leads a short conversational onboarding. No forms, no settings. The broker just answers. Their profile is built automatically from the responses.</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="progress-text">Profile building — step 1 of 5</span>
+      <span id="progress-pct">20%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+    <div class="progress-steps">
+      <span class="prog-step active" id="ps-0">Business basics</span>
+      <span class="prog-step" id="ps-1">Clients &amp; deals</span>
+      <span class="prog-step" id="ps-2">Lenders</span>
+      <span class="prog-step" id="ps-3">Process preferences</span>
+      <span class="prog-step" id="ps-4">Comms style</span>
+    </div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-header-dot"></div>
+      <div class="chat-header-name">NxtWave Copilot — Onboarding</div>
+      <div class="chat-header-sub" id="chat-sub">Setting up your profile</div>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+  </div>
+
+  <div class="profile-panel">
+    <div class="profile-header">
+      <div class="profile-title">Your profile — building now</div>
+      <div class="profile-badge" id="profile-badge">0 items saved</div>
+    </div>
+    <div class="profile-items" id="profile-items">
+      <div style="font-size:12px;color:var(--text-tertiary);padding:4px 0">Answers will appear here as your profile builds...</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="btn-prev" onclick="goTo(current-1)" disabled>Back</button>
+    <span class="step-counter" id="step-counter">Step 1 of 5</span>
+    <button class="nav-btn primary" id="btn-next" onclick="goTo(current+1)">Next</button>
+  </div>
+
+  <footer>
+    <span>2iC Copilot Agents — Internal use only</span>
+    <span>April 2026</span>
+  </footer>
+
+</div>
+
+<script>
+var current = 0;
+
+var profileItems = [];
+
+var steps = [
+  {
+    section: 'Business basics',
+    pct: 20,
+    chat: [
+      {from:'agent', text:"Hi Chris, great to have you set up. I'm going to ask you a few quick questions so I can get to know how you work and what you need.\n\nThere are no right or wrong answers — just tell me how you actually do things. We'll have your profile ready in about five minutes.\n\nFirst up: what's the main type of finance you do at NxtWave?"},
+      {from:'chips', options:['Commercial only','Mix of commercial + private lending','Mostly private lending','Commercial + residential']},
+      {from:'broker', text:'Mix of commercial and private lending — commercial is the bread and butter but private lending is a big growth area for us.'},
+      {from:'agent', text:"Got it. Commercial as the core, private lending growing. I've noted that.\n\nAnd roughly how many active deals do you typically have running at once?"},
+      {from:'chips', options:['Under 10','10–20','20–30','30+']},
+      {from:'broker', text:'Usually somewhere between 15 and 25.'},
+      {from:'agent', text:"Good to know — I'll make sure I'm keeping pipeline visibility tight for you at that volume."},
+    ],
+    saves: [
+      {key:'deal_types', val:'Commercial + private lending'},
+      {key:'typical_pipeline_size', val:'15–25 active deals'},
+    ]
+  },
+  {
+    section: 'Clients & deals',
+    pct: 40,
+    chat: [
+      {from:'agent', text:"Who are your typical clients? I want to make sure I'm framing comms and deal summaries the right way for your audience."},
+      {from:'chips', options:['Small business owners','Property developers','Mixed — all sizes','Corporate / larger business']},
+      {from:'broker', text:'Mostly small to medium business owners. Occasional property developer, especially on the private lending side.'},
+      {from:'agent', text:"Understood. And what's the typical deal size you're working with — just a rough range is fine."},
+      {from:'broker', text:'Commercial is usually $150k to $2m. Private lending tends to be $500k upwards, secured against property.'},
+      {from:'agent', text:"Noted. I'll use that context when researching lenders and flagging anything that looks out of range for your usual book."},
+    ],
+    saves: [
+      {key:'typical_clients', val:'SME owners + property developers'},
+      {key:'deal_size_commercial', val:'$150k – $2m'},
+      {key:'deal_size_private', val:'$500k+ secured'},
+    ]
+  },
+  {
+    section: 'Lenders',
+    pct: 60,
+    chat: [
+      {from:'agent', text:"Now lenders. Who do you go to first for commercial deals — the ones you know and trust?"},
+      {from:'broker', text:'Pepper Money and Westpac for most equipment and asset finance. Macquarie for larger commercial property. I also use a few non-banks — Grow Finance, Shift.'},
+      {from:'agent', text:"Perfect. And for private lending — who are your go-to lenders on that side?"},
+      {from:'broker', text:'We work with a panel of about six private lenders. Main ones are Zagga, Wiseberry Capital, and a couple of smaller boutique lenders I can intro you to properly once we\'re up and running.'},
+      {from:'agent', text:"Got it — I'll pre-load the main ones now and we can refine the private panel as we go. Are there any lenders you want to avoid or that you've had issues with?"},
+      {from:'broker', text:"I'd rather not use CreditorWatch-based lenders for our SME clients — they tend to cause friction. Nothing personal, just experience."},
+      {from:'agent', text:"Noted and saved. I won't include those in shortlists without flagging it first."},
+    ],
+    saves: [
+      {key:'preferred_lenders_commercial', val:'Pepper, Westpac, Macquarie, Grow, Shift'},
+      {key:'preferred_lenders_private', val:'Zagga, Wiseberry Capital + boutique panel'},
+      {key:'lender_exclusions', val:'CreditorWatch-based lenders — avoid for SME'},
+    ]
+  },
+  {
+    section: 'Process preferences',
+    pct: 80,
+    chat: [
+      {from:'agent', text:"A few questions about how you like to run deals. When you get a new enquiry, do you prefer to call them same day or qualify by email first?"},
+      {from:'chips', options:['Always call same day','Qualify by email first','Depends on the enquiry','Call within a few hours']},
+      {from:'broker', text:'Always call same day — I want to be first on the phone. That\'s non-negotiable for me.'},
+      {from:'agent', text:"Got it — same-day call is your standard. I'll always prompt you the moment a new lead comes in.\n\nFor doc collection — do you chase clients yourself or do you want me to handle the follow-up sequence?"},
+      {from:'chips', options:['Agent handles all doc chasing','I chase, agent tracks','Mix — depends on client','Agent starts, I take over if needed']},
+      {from:'broker', text:'Agent handles the chasing. I want to stay focused on the deal, not admin. If it gets to Hold B with no response, flag it to me.'},
+      {from:'agent', text:"Perfect. I'll run the full doc collect sequence and only pull you in at Hold B or if something unusual comes up."},
+    ],
+    saves: [
+      {key:'new_lead_preference', val:'Same-day call — always'},
+      {key:'doc_collect_ownership', val:'Agent handles, escalate at Hold B'},
+    ]
+  },
+  {
+    section: 'Comms style',
+    pct: 100,
+    chat: [
+      {from:'agent', text:"Last section — how you like to communicate with clients. This helps me match your tone when I draft emails and SMS.\n\nHow would you describe how you write to clients?"},
+      {from:'chips', options:['Warm and conversational','Professional and formal','Direct and concise','Friendly but detailed']},
+      {from:'broker', text:'Direct and concise — I don\'t like fluff. Clients are busy business owners, they appreciate getting to the point.'},
+      {from:'agent', text:"That's my default too. I'll keep client comms tight and action-oriented.\n\nFinally — do you prefer I draft messages for your approval, or send routine follow-ups automatically?"},
+      {from:'chips', options:['Always draft for my approval','Auto-send routine follow-ups','Auto-send, notify me after','Depends on the message type']},
+      {from:'broker', text:'Auto-send the routine stuff — acknowledgements, doc chase, reminders. Anything going to a lender or involving an approval decision, draft for me first.'},
+      {from:'agent', text:"Done. Routine client comms go automatically. Lender comms and approval-stage messages come to you as drafts first.\n\nThat's your profile set up, Chris. I'll get smarter about how you work every time we interact — and if I ever get something wrong, just tell me and I'll update the rule. Ready to get started?"},
+    ],
+    saves: [
+      {key:'comms_tone', val:'Direct and concise'},
+      {key:'auto_send_rules', val:'Routine comms auto; lender + approval = draft first'},
+    ]
+  }
+];
+
+function renderProfile() {
+  var container = document.getElementById('profile-items');
+  if (profileItems.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:4px 0">Answers will appear here as your profile builds...</div>';
+    return;
+  }
+  container.innerHTML = '';
+  profileItems.forEach(function(item, i) {
+    var div = document.createElement('div');
+    div.className = 'profile-item';
+    div.innerHTML = '<span class="profile-item-key">'+item.key.replace(/_/g,' ')+'</span><span class="profile-item-val">'+item.val+'</span>';
+    container.appendChild(div);
+    setTimeout(function(){ div.classList.add('visible'); }, i * 60);
+  });
+  document.getElementById('profile-badge').textContent = profileItems.length + ' items saved';
+}
+
+function goTo(n) {
+  if (n < 0 || n >= steps.length) return;
+  current = n;
+  var s = steps[n];
+
+  // progress
+  document.getElementById('progress-fill').style.width = s.pct + '%';
+  document.getElementById('progress-pct').textContent = s.pct + '%';
+  document.getElementById('progress-text').textContent = 'Profile building — step ' + (n+1) + ' of 5';
+  for (var i = 0; i < 5; i++) {
+    var el = document.getElementById('ps-'+i);
+    el.className = 'prog-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+
+  // chat
+  var body = document.getElementById('chat-body');
+  body.innerHTML = '';
+  s.chat.forEach(function(m) {
+    if (m.from === 'chips') {
+      var div = document.createElement('div');
+      div.className = 'chips';
+      m.options.forEach(function(opt) {
+        var c = document.createElement('div');
+        c.className = 'chip';
+        c.textContent = opt;
+        div.appendChild(c);
+      });
+      body.appendChild(div);
+    } else {
+      var wrap = document.createElement('div');
+      wrap.className = 'msg ' + m.from;
+      var av = document.createElement('div');
+      av.className = 'avatar ' + (m.from === 'broker' ? 'av-broker' : 'av-agent');
+      av.textContent = m.from === 'broker' ? 'CC' : '2iC';
+      var bub = document.createElement('div');
+      bub.className = 'bubble ' + (m.from === 'broker' ? 'bubble-broker' : 'bubble-agent');
+      bub.style.whiteSpace = 'pre-line';
+      bub.textContent = m.text;
+      wrap.appendChild(av);
+      wrap.appendChild(bub);
+      body.appendChild(wrap);
+    }
+  });
+
+  // save toast
+  if (s.saves && s.saves.length) {
+    var toast = document.createElement('div');
+    toast.className = 'save-toast';
+    toast.innerHTML = '<div class="save-dot"></div><span>' + s.saves.length + ' item' + (s.saves.length > 1 ? 's' : '') + ' saved to your profile from this section</span>';
+    body.appendChild(toast);
+    setTimeout(function(){ toast.classList.add('show'); }, 200);
+    s.saves.forEach(function(sv) {
+      if (!profileItems.find(function(p){ return p.key === sv.key; })) {
+        profileItems.push(sv);
+      }
+    });
+    renderProfile();
+  }
+
+  document.getElementById('chat-sub').textContent = s.section;
+  document.getElementById('btn-prev').disabled = n === 0;
+  var nb = document.getElementById('btn-next');
+  nb.disabled = n === steps.length - 1;
+  nb.textContent = n === steps.length - 2 ? 'Last section' : n === steps.length - 1 ? 'Profile complete' : 'Next section';
+  document.getElementById('step-counter').textContent = 'Step ' + (n+1) + ' of 5';
+}
+
+goTo(0);
+</script>
+</body>
+</html>

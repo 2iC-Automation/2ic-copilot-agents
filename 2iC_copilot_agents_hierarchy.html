@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2iC Copilot Agents — Agent Hierarchy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --text-primary: #1a1917;
+    --text-secondary: #6b6a65;
+    --text-tertiary: #9c9a93;
+
+    --purple-50: #EEEDFE;
+    --purple-200: #AFA9EC;
+    --purple-600: #534AB7;
+    --purple-800: #3C3489;
+
+    --teal-50: #E1F5EE;
+    --teal-200: #5DCAA5;
+    --teal-600: #0F6E56;
+    --teal-800: #085041;
+
+    --gray-50: #F1EFE8;
+    --gray-200: #B4B2A9;
+    --gray-600: #5F5E5A;
+    --gray-800: #444441;
+
+    --coral-50: #FAECE7;
+    --coral-600: #993C1D;
+    --coral-800: #712B13;
+
+    --blue-50: #E6F1FB;
+    --blue-600: #185FA5;
+    --blue-800: #0C447C;
+
+    --green-50: #EAF3DE;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+
+    --amber-50: #FAEEDA;
+    --amber-600: #854F0B;
+    --amber-800: #633806;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; }
+
+  header { margin-bottom: 36px; }
+
+  .brand {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  /* ── tier section ── */
+  .tier-section { margin-bottom: 8px; }
+
+  .tier-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .tier-badge {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .tier-badge.t1 { background: var(--purple-50); color: var(--purple-800); border: 0.5px solid var(--purple-600); }
+  .tier-badge.t2 { background: var(--teal-50);   color: var(--teal-800);   border: 0.5px solid var(--teal-600); }
+  .tier-badge.t3 { background: var(--gray-50);   color: var(--gray-800);   border: 0.5px solid var(--gray-600); }
+
+  .tier-desc {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  /* connector line */
+  .connector {
+    width: 1px;
+    background: var(--border-mid);
+    height: 16px;
+    margin-left: 32px;
+    margin-bottom: 0;
+  }
+
+  /* ── Tier 1 ── */
+  .primary-card {
+    background: var(--surface);
+    border: 0.5px solid var(--purple-600);
+    border-radius: 12px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .primary-card .card-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--purple-800);
+    margin-bottom: 3px;
+  }
+
+  .primary-card .card-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .primary-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--purple-50);
+    border: 0.5px solid var(--purple-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--purple-800);
+    flex-shrink: 0;
+  }
+
+  /* ── Tier 2 dept leads ── */
+  .dept-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .dept-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .dept-card {
+    background: var(--surface);
+    border: 0.5px solid var(--teal-600);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .dept-card .card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--teal-800);
+    margin-bottom: 3px;
+  }
+
+  .dept-card .card-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* ── Tier 3 specialists ── */
+  .specialists-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .specialists-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .spec-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border-mid);
+    border-radius: 8px;
+    padding: 11px 13px;
+    position: relative;
+  }
+
+  .spec-card .dept-tag {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  .spec-card .card-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+
+  .spec-card .card-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+  }
+
+  /* dept colour variants */
+  .spec-finance  { border-left: 2px solid var(--teal-600); }
+  .spec-comms    { border-left: 2px solid var(--blue-600); }
+  .spec-marketing{ border-left: 2px solid var(--coral-600); }
+  .spec-admin    { border-left: 2px solid var(--gray-600); }
+
+  .tag-finance   { color: var(--teal-600); }
+  .tag-comms     { color: var(--blue-600); }
+  .tag-marketing { color: var(--coral-600); }
+  .tag-admin     { color: var(--gray-600); }
+
+  /* ── profile layer ── */
+  .profile-section {
+    margin-top: 32px;
+    border: 0.5px solid var(--border-mid);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 20px 22px;
+  }
+
+  .profile-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 14px;
+  }
+
+  .profile-layers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 560px) {
+    .profile-layers { grid-template-columns: 1fr; }
+  }
+
+  .profile-layer {
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .layer-1 { background: var(--blue-50);   border: 0.5px solid var(--blue-600); }
+  .layer-2 { background: var(--amber-50);  border: 0.5px solid var(--amber-600); }
+  .layer-3 { background: var(--green-50);  border: 0.5px solid var(--green-600); }
+
+  .layer-name {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .layer-1 .layer-name { color: var(--blue-800); }
+  .layer-2 .layer-name { color: var(--amber-800); }
+  .layer-3 .layer-name { color: var(--green-800); }
+
+  .layer-desc {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .layer-1 .layer-desc { color: var(--blue-600); }
+  .layer-2 .layer-desc { color: var(--amber-600); }
+  .layer-3 .layer-desc { color: var(--green-600); }
+
+  /* ── integrations ── */
+  .integrations {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .int-pill {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 4px 12px;
+    border-radius: 14px;
+    border: 0.5px solid var(--border-mid);
+    color: var(--text-secondary);
+    background: var(--bg);
+  }
+
+  .int-pill.urgent {
+    background: var(--amber-50);
+    color: var(--amber-800);
+    border-color: var(--amber-600);
+  }
+
+  .int-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--border);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">2iC Copilot Agents — NxtWave Pilot</div>
+    <h1>Agent hierarchy</h1>
+    <p class="subtitle">Every broker gets their own dedicated team of AI agents structured across three tiers. The broker only ever speaks to the Primary Agent — everything else happens behind the scenes.</p>
+  </header>
+
+  <!-- TIER 1 -->
+  <div class="tier-section">
+    <div class="tier-header">
+      <span class="tier-badge t1">Tier 1</span>
+      <span class="tier-desc">Single point of contact — the broker speaks only to this agent</span>
+    </div>
+    <div class="primary-card">
+      <div>
+        <div class="card-name">Primary Agent</div>
+        <div class="card-desc">Understands the broker's full context across all active deals. Receives every message, decides which departments to route to, and returns a single coherent response.</div>
+      </div>
+      <div class="primary-avatar">PA</div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- TIER 2 -->
+  <div class="tier-section">
+    <div class="tier-header">
+      <span class="tier-badge t2">Tier 2</span>
+      <span class="tier-desc">Department leads — each owns a domain, delegates to specialists</span>
+    </div>
+    <div class="dept-row">
+      <div class="dept-card">
+        <div class="card-name">Finance Lead</div>
+        <div class="card-desc">Full lending pipeline from enquiry to post-settlement</div>
+      </div>
+      <div class="dept-card">
+        <div class="card-name">Comms Lead</div>
+        <div class="card-desc">Client communications and CRM management</div>
+      </div>
+      <div class="dept-card">
+        <div class="card-name">Marketing Lead</div>
+        <div class="card-desc">Social content, EDMs, and scheduling</div>
+      </div>
+      <div class="dept-card">
+        <div class="card-name">Admin Lead</div>
+        <div class="card-desc">Finance, invoicing, HR, and reporting</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <!-- TIER 3 -->
+  <div class="tier-section">
+    <div class="tier-header">
+      <span class="tier-badge t3">Tier 3</span>
+      <span class="tier-desc">Specialist agents — each has one focused job and does it reliably</span>
+    </div>
+    <div class="specialists-grid">
+
+      <!-- Finance -->
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Lead intake</div>
+        <div class="card-desc">Creates Pipedrive deal, logs lead source</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Call sequence</div>
+        <div class="card-desc">Runs Day 1–3 call logic, SMS/email, HOLD/LOST</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Doc collect</div>
+        <div class="card-desc">Doc 1–3 sequence, chases outstanding, Hold B</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">LOO specialist</div>
+        <div class="card-desc">Drafts LOO, sends via DocuSign, chases signature</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Private lending</div>
+        <div class="card-desc">Scenario to lenders, signing, formal assessment, PEXA</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Application</div>
+        <div class="card-desc">Drafts application, pre-submission checklist, lodgement</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Assessment</div>
+        <div class="card-desc">Monitors lender, conditions tracker, client updates</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Settlement</div>
+        <div class="card-desc">PEXA coordination, all parties, invoice generation</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Post-settlement</div>
+        <div class="card-desc">Settlement sequence, EDM, review and referral ask</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Lender research</div>
+        <div class="card-desc">Lender shortlist, product match, credit narrative</div>
+      </div>
+      <div class="spec-card spec-finance">
+        <span class="dept-tag tag-finance">Finance</span>
+        <div class="card-name">Compliance</div>
+        <div class="card-desc">Responsible lending checks, flags, checklist</div>
+      </div>
+
+      <!-- Comms -->
+      <div class="spec-card spec-comms">
+        <span class="dept-tag tag-comms">Comms</span>
+        <div class="card-name">CRM management</div>
+        <div class="card-desc">Client records, Pipedrive updates, deal stages</div>
+      </div>
+      <div class="spec-card spec-comms">
+        <span class="dept-tag tag-comms">Comms</span>
+        <div class="card-name">Client updates</div>
+        <div class="card-desc">Drafts and sends status emails to clients</div>
+      </div>
+
+      <!-- Marketing -->
+      <div class="spec-card spec-marketing">
+        <span class="dept-tag tag-marketing">Marketing</span>
+        <div class="card-name">Content drafting</div>
+        <div class="card-desc">Social posts in broker's tone and style</div>
+      </div>
+      <div class="spec-card spec-marketing">
+        <span class="dept-tag tag-marketing">Marketing</span>
+        <div class="card-name">EDM sequences</div>
+        <div class="card-desc">Nurture and post-settlement email workflows</div>
+      </div>
+
+      <!-- Admin -->
+      <div class="spec-card spec-admin">
+        <span class="dept-tag tag-admin">Admin</span>
+        <div class="card-name">Invoicing + finance</div>
+        <div class="card-desc">Invoice lender, track commissions, pipeline reports</div>
+      </div>
+      <div class="spec-card spec-admin">
+        <span class="dept-tag tag-admin">Admin</span>
+        <div class="card-name">HR + staff</div>
+        <div class="card-desc">Onboarding, leave tracking, employment records</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PROFILE LAYERS -->
+  <div class="profile-section">
+    <div class="profile-title">Three-layer knowledge profile — read by every agent before every conversation</div>
+    <div class="profile-layers">
+      <div class="profile-layer layer-1">
+        <div class="layer-name">Layer 1 — 2iC base</div>
+        <div class="layer-desc">Core industry knowledge, compliance obligations, communication standards. Maintained by 2iC. Applies to all brokers across all brands.</div>
+      </div>
+      <div class="profile-layer layer-2">
+        <div class="layer-name">Layer 2 — Brokerage layer</div>
+        <div class="layer-desc">NxtWave-specific config: preferred lenders, brand voice, internal processes. Set once on onboarding. Inherited by all NxtWave brokers.</div>
+      </div>
+      <div class="profile-layer layer-3">
+        <div class="layer-name">Layer 3 — Broker profile</div>
+        <div class="layer-desc">Individual to each broker. Built through onboarding conversation, refined through daily use. Personal preferences and working rules.</div>
+      </div>
+    </div>
+
+    <div class="int-label">Integrations</div>
+    <div class="integrations">
+      <span class="int-pill">Pipedrive CRM</span>
+      <span class="int-pill">DocuSign</span>
+      <span class="int-pill">Email / SMS</span>
+      <span class="int-pill urgent">Social scheduling platform ⚑ urgent</span>
+    </div>
+  </div>
+
+  <footer>
+    <span>2iC Copilot Agents — Internal use only</span>
+    <span>April 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>

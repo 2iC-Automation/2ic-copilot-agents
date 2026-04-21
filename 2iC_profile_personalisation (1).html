@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2iC Copilot Agents — Profile Personalisation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --text-primary: #1a1917;
+    --text-secondary: #6b6a65;
+    --text-tertiary: #9c9a93;
+    --purple-50: #EEEDFE;
+    --purple-600: #534AB7;
+    --purple-800: #3C3489;
+    --teal-50: #E1F5EE;
+    --teal-600: #0F6E56;
+    --teal-800: #085041;
+    --green-50: #EAF3DE;
+    --green-100: #C0DD97;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+    --amber-50: #FAEEDA;
+    --amber-600: #854F0B;
+    --amber-800: #633806;
+    --coral-50: #FAECE7;
+    --coral-600: #993C1D;
+    --coral-800: #712B13;
+    --gray-50: #F1EFE8;
+    --gray-600: #5F5E5A;
+    --gray-800: #444441;
+    --blue-50: #E6F1FB;
+    --blue-600: #185FA5;
+    --blue-800: #0C447C;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+  }
+
+  .page { max-width: 880px; margin: 0 auto; }
+
+  header { margin-bottom: 32px; }
+  .brand { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 8px; }
+  h1 { font-size: 26px; font-weight: 500; margin-bottom: 8px; line-height: 1.2; }
+  .subtitle { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 600px; }
+
+  /* scenario tabs */
+  .scenario-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; padding: 6px 14px; border-radius: 20px;
+    border: 0.5px solid var(--border-mid);
+    background: var(--surface); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn:hover { background: var(--bg); }
+  .tab-btn.active { background: var(--purple-50); color: var(--purple-800); border-color: var(--purple-600); font-weight: 500; }
+
+  /* two-col layout */
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: start; }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 8px; }
+
+  /* chat */
+  .chat-window { background: var(--surface); border: 0.5px solid var(--border-mid); border-radius: 14px; overflow: hidden; }
+  .chat-header { padding: 11px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 9px; }
+  .chat-header-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-600); }
+  .chat-header-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+  .chat-body { padding: 18px 16px; }
+
+  .msg { margin-bottom: 14px; display: flex; gap: 9px; align-items: flex-start; }
+  .msg.broker { flex-direction: row-reverse; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+  .av-agent  { background: var(--teal-50);   color: var(--teal-800);   border: 0.5px solid var(--teal-600); }
+  .av-broker { background: var(--purple-50); color: var(--purple-800); border: 0.5px solid var(--purple-600); }
+
+  .bubble { font-size: 13px; line-height: 1.6; padding: 10px 13px; border-radius: 11px; max-width: 86%; white-space: pre-line; }
+  .bubble-agent  { background: var(--bg); border: 0.5px solid var(--border); border-bottom-left-radius: 3px; color: var(--text-primary); }
+  .bubble-broker { background: var(--purple-50); border-bottom-right-radius: 3px; color: var(--purple-800); }
+
+  /* save prompt card — the key UI */
+  .save-prompt {
+    margin: 4px 0 4px 39px;
+    border: 1px solid var(--amber-600);
+    border-radius: 10px;
+    background: var(--amber-50);
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  .save-prompt-label {
+    font-size: 10px; font-weight: 500; font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--amber-600); margin-bottom: 6px;
+  }
+  .save-prompt-rule {
+    font-size: 13px; color: var(--amber-800); font-weight: 500;
+    margin-bottom: 10px; line-height: 1.4;
+  }
+  .save-prompt-actions { display: flex; gap: 7px; }
+  .save-yes, .save-no {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; padding: 5px 16px; border-radius: 14px;
+    cursor: pointer; font-weight: 500; transition: all 0.15s;
+    border: 0.5px solid;
+  }
+  .save-yes { background: var(--green-50); color: var(--green-800); border-color: var(--green-600); }
+  .save-yes:hover { background: var(--green-600); color: white; }
+  .save-no  { background: var(--surface); color: var(--text-secondary); border-color: var(--border-mid); }
+  .save-no:hover { background: var(--bg); }
+
+  .save-confirmed {
+    margin: 4px 0 4px 39px;
+    border: 0.5px solid var(--green-600);
+    border-radius: 8px; background: var(--green-50);
+    padding: 9px 13px; font-size: 12px;
+    color: var(--green-800); display: flex; align-items: center; gap: 8px;
+  }
+  .save-confirmed-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-600); flex-shrink: 0; }
+
+  /* profile panel */
+  .profile-panel { background: var(--surface); border: 0.5px solid var(--border-mid); border-radius: 12px; overflow: hidden; }
+  .profile-panel-header { padding: 12px 16px; border-bottom: 0.5px solid var(--border); }
+  .profile-panel-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
+  .profile-panel-sub { font-size: 11px; color: var(--text-tertiary); }
+
+  .profile-rules { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+  .rule-item {
+    padding: 9px 12px; border-radius: 8px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    transition: all 0.3s;
+  }
+  .rule-item.new-rule {
+    background: var(--green-50); border-color: var(--green-600);
+    animation: pulse-in 0.4s ease;
+  }
+  @keyframes pulse-in {
+    0% { transform: scale(0.97); opacity: 0.4; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .rule-key { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-tertiary); margin-bottom: 3px; }
+  .rule-val { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
+  .rule-item.new-rule .rule-key { color: var(--green-600); }
+  .rule-item.new-rule .rule-val { color: var(--green-800); }
+
+  .new-badge {
+    display: inline-block; font-size: 9px; font-family: 'DM Mono', monospace;
+    padding: 1px 6px; border-radius: 8px;
+    background: var(--green-100); color: var(--green-800);
+    margin-left: 6px; vertical-align: middle;
+    font-weight: 500;
+  }
+
+  /* nav */
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 400;
+    padding: 8px 20px; border-radius: 8px; border: 0.5px solid var(--border-mid);
+    background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn:hover:not(:disabled) { background: var(--bg); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.primary { background: var(--purple-50); color: var(--purple-800); border-color: var(--purple-600); font-weight: 500; }
+  .nav-btn.primary:hover { background: var(--purple-600); color: white; }
+  .step-counter { font-size: 12px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-tertiary); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">2iC Copilot Agents — NxtWave Pilot</div>
+    <h1>Profile personalisation</h1>
+    <p class="subtitle">During daily use, the agent notices when a broker does something differently to their profile. It asks whether to save it as a standing rule. The broker just says yes or no — the profile updates automatically.</p>
+  </header>
+
+  <div class="scenario-tabs">
+    <button class="tab-btn active" onclick="loadScenario(0)">Scenario 1 — doc timing</button>
+    <button class="tab-btn" onclick="loadScenario(1)">Scenario 2 — welcome email</button>
+    <button class="tab-btn" onclick="loadScenario(2)">Scenario 3 — lender preference</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="panel-label">Conversation</div>
+      <div class="chat-window">
+        <div class="chat-header">
+          <div class="chat-header-dot"></div>
+          <div class="chat-header-name">NxtWave Copilot — Chris Cook</div>
+        </div>
+        <div class="chat-body" id="chat-body"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Broker profile — Layer 3</div>
+      <div class="profile-panel">
+        <div class="profile-panel-header">
+          <div class="profile-panel-title">Chris Cook — NxtWave</div>
+          <div class="profile-panel-sub">Active rules saved to profile</div>
+        </div>
+        <div class="profile-rules" id="profile-rules"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="btn-prev" onclick="goStep(currentStep-1)" disabled>Back</button>
+    <span class="step-counter" id="step-counter">Step 1 of 4</span>
+    <button class="nav-btn primary" id="btn-next" onclick="goStep(currentStep+1)">Next</button>
+  </div>
+
+  <footer>
+    <span>2iC Copilot Agents — Internal use only</span>
+    <span>April 2026</span>
+  </footer>
+
+</div>
+
+<script>
+var currentScenario = 0;
+var currentStep = 0;
+
+var baseRules = [
+  {key:'new_lead_preference', val:'Same-day call — always', isNew: false},
+  {key:'doc_collect_ownership', val:'Agent handles, escalate at Hold B', isNew: false},
+  {key:'comms_tone', val:'Direct and concise', isNew: false},
+  {key:'preferred_lenders_commercial', val:'Pepper, Westpac, Macquarie, Grow, Shift', isNew: false},
+  {key:'auto_send_rules', val:'Routine comms auto; lender + approval = draft first', isNew: false},
+];
+
+var scenarios = [
+  {
+    title: 'Scenario 1 — doc timing',
+    steps: [
+      {
+        chat: [
+          {from:'broker', text:"For the Stafford deal — can you send the doc request now? I want to get the bankies moving today even though I haven't confirmed the LOO yet."},
+          {from:'agent', text:"On it — doc request going to Ryan now.\n\nJust so I know for next time: your current profile has doc collect starting after LOO signature. Sounds like for some deals you prefer to kick it off earlier?"},
+        ],
+        savePrompt: {rule:"Start doc collect before LOO signature when broker requests it, rather than waiting for signed LOO.", show: true, saved: false}
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Stafford deal — can you send the doc request now? I want to get the bankies moving today even though I haven't confirmed the LOO yet."},
+          {from:'agent', text:"On it — doc request going to Ryan now.\n\nJust so I know for next time: your current profile has doc collect starting after LOO signature. Sounds like for some deals you prefer to kick it off earlier?"},
+          {from:'save-prompt', rule:"Start doc collect before LOO when broker requests — don't wait for signed LOO.", saved: false},
+        ],
+        savePrompt: {rule:"Start doc collect before LOO signature when broker requests it, rather than waiting for signed LOO.", show: true, saved: false}
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Stafford deal — can you send the doc request now? I want to get the bankies moving today even though I haven't confirmed the LOO yet."},
+          {from:'agent', text:"On it — doc request going to Ryan now.\n\nJust so I know for next time: your current profile has doc collect starting after LOO signature. Sounds like for some deals you prefer to kick it off earlier?"},
+          {from:'save-prompt', rule:"Start doc collect before LOO when broker requests — don't wait for signed LOO.", saved: true},
+          {from:'agent', text:"Done — saved to your profile. I'll flag it as an option whenever you send a new doc request before LOO is signed."},
+        ],
+        newRule: {key:'doc_collect_timing', val:'Can start before LOO if broker requests — flag as option', isNew: true},
+        savePrompt: null
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Stafford deal — can you send the doc request now? I want to get the bankies moving today even though I haven't confirmed the LOO yet."},
+          {from:'agent', text:"On it — doc request going to Ryan now.\n\nJust so I know for next time: your current profile has doc collect starting after LOO signature. Sounds like for some deals you prefer to kick it off earlier?"},
+          {from:'save-prompt', rule:"Start doc collect before LOO when broker requests — don't wait for signed LOO.", saved: true},
+          {from:'agent', text:"Done — saved to your profile. I'll flag it as an option whenever you send a new doc request before LOO is signed."},
+          {from:'broker', text:"Exactly. On private lending deals especially, I always want docs moving as soon as the client's keen — time kills deals."},
+          {from:'agent', text:"Noted. I'll apply that more broadly for private lending: doc collect can begin as soon as client intent is confirmed, without waiting for the LOO."},
+          {from:'save-prompt', rule:"For private lending deals: begin doc collect on confirmed client intent — do not wait for LOO signature.", saved: false},
+        ],
+        savePrompt: {rule:"For private lending deals: begin doc collect on confirmed client intent — do not wait for LOO signature.", show: true, saved: false}
+      }
+    ]
+  },
+  {
+    title: 'Scenario 2 — welcome email',
+    steps: [
+      {
+        chat: [
+          {from:'broker', text:"Did the welcome email go to Marcus Webb? I always send one after a discovery call."},
+          {from:'agent', text:"It didn't — that wasn't in your profile yet. I've drafted one now ready to send.\n\nDo you want me to always send a welcome email after a discovery call going forward?"},
+        ],
+        savePrompt: null
+      },
+      {
+        chat: [
+          {from:'broker', text:"Did the welcome email go to Marcus Webb? I always send one after a discovery call."},
+          {from:'agent', text:"It didn't — that wasn't in your profile yet. I've drafted one now ready to send.\n\nDo you want me to always send a welcome email after a discovery call going forward?"},
+          {from:'save-prompt', rule:"Always send a welcome email to the client after a discovery call.", saved: false},
+        ],
+        savePrompt: {rule:"Always send a welcome email to the client after a discovery call.", show: true, saved: false}
+      },
+      {
+        chat: [
+          {from:'broker', text:"Did the welcome email go to Marcus Webb? I always send one after a discovery call."},
+          {from:'agent', text:"It didn't — that wasn't in your profile yet. I've drafted one now ready to send.\n\nDo you want me to always send a welcome email after a discovery call going forward?"},
+          {from:'save-prompt', rule:"Always send a welcome email to the client after a discovery call.", saved: true},
+          {from:'agent', text:"Done — saved. Marcus's welcome email is ready for your approval. Want me to send it now?"},
+          {from:'broker', text:"Yes send it. Keep the tone warm but short."},
+          {from:'agent', text:"Sent. And I've noted the tone preference for welcome emails — warm but concise. I'll apply that going forward."},
+        ],
+        newRule: {key:'post_discovery_welcome', val:'Always send welcome email — warm but concise', isNew: true},
+        savePrompt: null
+      },
+      {
+        chat: [
+          {from:'broker', text:"Did the welcome email go to Marcus Webb? I always send one after a discovery call."},
+          {from:'agent', text:"It didn't — that wasn't in your profile yet. I've drafted one now ready to send.\n\nDo you want me to always send a welcome email after a discovery call going forward?"},
+          {from:'save-prompt', rule:"Always send a welcome email to the client after a discovery call.", saved: true},
+          {from:'agent', text:"Done — saved. Marcus's welcome email is ready for your approval. Want me to send it now?"},
+          {from:'broker', text:"Yes send it. Keep the tone warm but short."},
+          {from:'agent', text:"Sent. And I've noted the tone preference for welcome emails — warm but concise. I'll apply that going forward."},
+          {from:'broker', text:"Also — I like to attach the NxtWave intro PDF in that first email."},
+          {from:'agent', text:"Good to know. Want me to always attach the intro PDF to post-discovery welcome emails?"},
+          {from:'save-prompt', rule:"Attach NxtWave intro PDF to all post-discovery welcome emails.", saved: false},
+        ],
+        savePrompt: {rule:"Attach NxtWave intro PDF to all post-discovery welcome emails.", show: true, saved: false}
+      }
+    ]
+  },
+  {
+    title: 'Scenario 3 — lender preference',
+    steps: [
+      {
+        chat: [
+          {from:'broker', text:"For the Chen deal — don't use Westpac. They've been slow on commercial property lately. Try Macquarie or Liberty first."},
+          {from:'agent', text:"Noted for Chen — I'll shortlist Macquarie and Liberty.\n\nIs this a one-off for this deal, or are you changing your preference on Westpac for commercial property generally?"},
+        ],
+        savePrompt: null
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Chen deal — don't use Westpac. They've been slow on commercial property lately. Try Macquarie or Liberty first."},
+          {from:'agent', text:"Noted for Chen — I'll shortlist Macquarie and Liberty.\n\nIs this a one-off for this deal, or are you changing your preference on Westpac for commercial property generally?"},
+          {from:'broker', text:"Generally. Until they sort their turnaround times out, de-prioritise them for commercial property. Still fine for equipment and asset finance."},
+          {from:'agent', text:"Got it — I'll update your lender preferences."},
+          {from:'save-prompt', rule:"De-prioritise Westpac for commercial property deals. Still preferred for equipment and asset finance.", saved: false},
+        ],
+        savePrompt: {rule:"De-prioritise Westpac for commercial property. Still preferred for equipment + asset finance.", show: true, saved: false}
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Chen deal — don't use Westpac. They've been slow on commercial property lately. Try Macquarie or Liberty first."},
+          {from:'agent', text:"Noted for Chen — I'll shortlist Macquarie and Liberty.\n\nIs this a one-off for this deal, or are you changing your preference on Westpac for commercial property generally?"},
+          {from:'broker', text:"Generally. Until they sort their turnaround times out, de-prioritise them for commercial property. Still fine for equipment and asset finance."},
+          {from:'agent', text:"Got it — I'll update your lender preferences."},
+          {from:'save-prompt', rule:"De-prioritise Westpac for commercial property. Still preferred for equipment + asset finance.", saved: true},
+          {from:'agent', text:"Saved. Westpac stays on your panel for equipment and asset finance but drops to the bottom of the shortlist for commercial property until you tell me otherwise."},
+        ],
+        newRule: {key:'westpac_preference', val:'Deprioritise commercial property — still preferred for equipment/asset', isNew: true},
+        savePrompt: null
+      },
+      {
+        chat: [
+          {from:'broker', text:"For the Chen deal — don't use Westpac. They've been slow on commercial property lately. Try Macquarie or Liberty first."},
+          {from:'agent', text:"Noted for Chen — I'll shortlist Macquarie and Liberty.\n\nIs this a one-off for this deal, or are you changing your preference on Westpac for commercial property generally?"},
+          {from:'broker', text:"Generally. Until they sort their turnaround times out, de-prioritise them for commercial property. Still fine for equipment and asset finance."},
+          {from:'agent', text:"Got it — I'll update your lender preferences."},
+          {from:'save-prompt', rule:"De-prioritise Westpac for commercial property. Still preferred for equipment + asset finance.", saved: true},
+          {from:'agent', text:"Saved. Westpac stays on your panel for equipment and asset finance but drops to the bottom of the shortlist for commercial property until you tell me otherwise."},
+          {from:'broker', text:"Actually — add Liberty Financial to my standard shortlist for commercial property. I've been happy with their turnaround."},
+          {from:'agent', text:"Done. Liberty Financial added to your commercial property shortlist as a preferred lender."},
+          {from:'save-prompt', rule:"Add Liberty Financial to preferred lender shortlist for commercial property deals.", saved: false},
+        ],
+        savePrompt: {rule:"Add Liberty Financial to preferred lender shortlist for commercial property.", show: true, saved: false}
+      }
+    ]
+  }
+];
+
+var currentRules = JSON.parse(JSON.stringify(baseRules));
+
+function renderProfile() {
+  var container = document.getElementById('profile-rules');
+  container.innerHTML = '';
+  currentRules.forEach(function(rule) {
+    var div = document.createElement('div');
+    div.className = 'rule-item' + (rule.isNew ? ' new-rule' : '');
+    div.innerHTML = '<div class="rule-key">' + rule.key.replace(/_/g,' ') + (rule.isNew ? '<span class="new-badge">new</span>' : '') + '</div><div class="rule-val">' + rule.val + '</div>';
+    container.appendChild(div);
+  });
+}
+
+function renderChat(step) {
+  var body = document.getElementById('chat-body');
+  body.innerHTML = '';
+  var s = scenarios[currentScenario].steps[step];
+
+  s.chat.forEach(function(m) {
+    if (m.from === 'save-prompt') {
+      var card = document.createElement('div');
+      card.className = 'save-prompt';
+      card.innerHTML = '<div class="save-prompt-label">New rule detected</div><div class="save-prompt-rule">"' + m.rule + '"</div>';
+      if (m.saved) {
+        card.innerHTML += '<div style="font-size:12px;color:var(--green-800);font-weight:500">Saved to your profile</div>';
+        card.style.borderColor = 'var(--green-600)';
+        card.style.background = 'var(--green-50)';
+      } else {
+        card.innerHTML += '<div class="save-prompt-actions"><button class="save-yes" onclick="saveRule()">Yes, save this rule</button><button class="save-no" onclick="skipRule()">Not this time</button></div>';
+      }
+      body.appendChild(card);
+    } else {
+      var wrap = document.createElement('div');
+      wrap.className = 'msg ' + m.from;
+      var av = document.createElement('div');
+      av.className = 'avatar ' + (m.from === 'broker' ? 'av-broker' : 'av-agent');
+      av.textContent = m.from === 'broker' ? 'CC' : '2iC';
+      var bub = document.createElement('div');
+      bub.className = 'bubble ' + (m.from === 'broker' ? 'bubble-broker' : 'bubble-agent');
+      bub.style.whiteSpace = 'pre-line';
+      bub.textContent = m.text;
+      wrap.appendChild(av);
+      wrap.appendChild(bub);
+      body.appendChild(wrap);
+    }
+  });
+}
+
+function saveRule() {
+  goStep(currentStep + 1);
+}
+
+function skipRule() {
+  var body = document.getElementById('chat-body');
+  var prompts = body.querySelectorAll('.save-prompt');
+  var last = prompts[prompts.length-1];
+  if (last) {
+    last.innerHTML = '<div class="save-prompt-label">Rule skipped</div><div style="font-size:12px;color:var(--amber-600)">Not saved — I\'ll ask again if it comes up.</div>';
+  }
+}
+
+function goStep(n) {
+  var s = scenarios[currentScenario];
+  if (n < 0 || n >= s.steps.length) return;
+  currentStep = n;
+
+  var step = s.steps[n];
+  if (step.newRule) {
+    currentRules = currentRules.map(function(r){ return {key:r.key, val:r.val, isNew:false}; });
+    var exists = currentRules.find(function(r){ return r.key === step.newRule.key; });
+    if (!exists) currentRules.push(step.newRule);
+    else exists.isNew = false;
+    renderProfile();
+  }
+
+  renderChat(n);
+
+  document.getElementById('btn-prev').disabled = n === 0;
+  document.getElementById('btn-next').disabled = n === s.steps.length - 1;
+  document.getElementById('step-counter').textContent = 'Step ' + (n+1) + ' of ' + s.steps.length;
+  document.getElementById('btn-next').textContent = n === s.steps.length - 2 ? 'See result' : 'Next';
+}
+
+function loadScenario(idx) {
+  currentScenario = idx;
+  currentStep = 0;
+  currentRules = JSON.parse(JSON.stringify(baseRules));
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){ b.classList.toggle('active', i===idx); });
+  renderProfile();
+  goStep(0);
+}
+
+loadScenario(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2iC Copilot Agents — Conversation Walkthrough</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --text-primary: #1a1917;
+    --text-secondary: #6b6a65;
+    --text-tertiary: #9c9a93;
+    --purple-light: #EEEDFE;
+    --purple-mid: #AFA9EC;
+    --purple-dark: #3C3489;
+    --purple-border: #534AB7;
+    --teal-light: #E1F5EE;
+    --teal-mid: #5DCAA5;
+    --teal-dark: #085041;
+    --teal-border: #0F6E56;
+    --green-light: #EAF3DE;
+    --green-dark: #27500A;
+    --green-border: #3B6D11;
+    --blue-light: #E6F1FB;
+    --blue-dark: #0C447C;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 32px;
+  }
+
+  .brand {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 560px;
+  }
+
+  .stepper {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .step-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-mid);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .step-btn:hover { background: var(--bg); }
+  .step-btn.active {
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    border-color: var(--purple-border);
+    font-weight: 500;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .hier-box {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--surface);
+  }
+
+  .tier { margin-bottom: 14px; }
+  .tier:last-child { margin-bottom: 0; }
+
+  .tier-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .agent-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 14px;
+    border: 0.5px solid var(--border-mid);
+    color: var(--text-secondary);
+    margin: 2px;
+    transition: all 0.25s ease;
+    background: var(--surface);
+  }
+
+  .agent-pill.active {
+    border-color: var(--purple-border);
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    font-weight: 500;
+  }
+
+  .agent-pill.fired {
+    border-color: var(--teal-border);
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    font-weight: 500;
+  }
+
+  .agent-pill.done {
+    border-color: var(--green-border);
+    background: var(--green-light);
+    color: var(--green-dark);
+    opacity: 0.65;
+  }
+
+  .chat-panel {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chat-header::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal-mid);
+    display: inline-block;
+  }
+
+  .chat-body {
+    padding: 14px;
+    min-height: 280px;
+  }
+
+  .msg {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .msg.broker { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .av-broker { background: var(--purple-light); color: var(--purple-dark); }
+  .av-agent  { background: var(--teal-light);   color: var(--teal-dark); }
+
+  .bubble {
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 9px 13px;
+    border-radius: 10px;
+    max-width: 84%;
+    white-space: pre-line;
+  }
+
+  .bubble-broker {
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    border-bottom-right-radius: 3px;
+  }
+
+  .bubble-agent {
+    background: var(--bg);
+    color: var(--text-primary);
+    border-bottom-left-radius: 3px;
+    border: 0.5px solid var(--border);
+  }
+
+  .routing-note {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 7px 12px;
+    margin: 6px 0;
+    border-top: 0.5px dashed var(--border-mid);
+    border-bottom: 0.5px dashed var(--border-mid);
+    line-height: 1.5;
+  }
+
+  .outcome-bar {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--surface);
+    margin-bottom: 16px;
+  }
+
+  .outcome-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .outcome-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .outcome-pill {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 0.5px solid var(--green-border);
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-mid);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover:not(:disabled) { background: var(--bg); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .nav-btn.primary {
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    border-color: var(--purple-border);
+    font-weight: 500;
+  }
+
+  .nav-btn.primary:hover { background: var(--purple-mid); color: white; }
+
+  .step-counter {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: 'DM Mono', monospace;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--border);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">2iC Copilot Agents — NxtWave Pilot</div>
+    <h1>How a broker conversation works</h1>
+    <p class="subtitle">One message from Chris triggers a coordinated response across the three-tier agent hierarchy. This walkthrough shows what happens at each layer — and what Chris gets back.</p>
+  </header>
+
+  <div class="stepper">
+    <button class="step-btn active" onclick="goTo(0)">1. Chris sends a message</button>
+    <button class="step-btn" onclick="goTo(1)">2. Primary Agent receives</button>
+    <button class="step-btn" onclick="goTo(2)">3. Routing to departments</button>
+    <button class="step-btn" onclick="goTo(3)">4. Specialists act</button>
+    <button class="step-btn" onclick="goTo(4)">5. Chris gets one response</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="panel-label">Agent hierarchy</div>
+      <div class="hier-box">
+        <div class="tier">
+          <div class="tier-label">Tier 1 — Primary Agent</div>
+          <span class="agent-pill" id="pill-primary">Primary Agent</span>
+        </div>
+        <div class="tier">
+          <div class="tier-label">Tier 2 — Department leads</div>
+          <span class="agent-pill" id="pill-finance">Finance Lead</span>
+          <span class="agent-pill" id="pill-comms">Comms Lead</span>
+          <span class="agent-pill" id="pill-admin">Admin Lead</span>
+        </div>
+        <div class="tier">
+          <div class="tier-label">Tier 3 — Specialists</div>
+          <span class="agent-pill" id="pill-intake">Lead intake</span>
+          <span class="agent-pill" id="pill-call">Call sequence</span>
+          <span class="agent-pill" id="pill-comply">Compliance</span>
+          <span class="agent-pill" id="pill-research">Lender research</span>
+          <span class="agent-pill" id="pill-crm">CRM</span>
+          <span class="agent-pill" id="pill-invoice">Invoicing</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Conversation</div>
+      <div class="chat-panel">
+        <div class="chat-header">NxtWave Copilot — Chris Cook</div>
+        <div class="chat-body" id="chat-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="outcome-bar" id="outcome-bar" style="display:none">
+    <div class="outcome-label">What happened in the background</div>
+    <div class="outcome-items" id="outcome-items"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="btn-prev" onclick="goTo(current-1)" disabled>Back</button>
+    <span class="step-counter" id="step-counter">Step 1 of 5</span>
+    <button class="nav-btn primary" id="btn-next" onclick="goTo(current+1)">Next</button>
+  </div>
+
+  <footer>
+    <span>2iC Copilot Agents — Internal use only</span>
+    <span>April 2026</span>
+  </footer>
+
+</div>
+
+<script>
+var current = 0;
+
+var steps = [
+  {
+    pills: {primary:'',finance:'',comms:'',admin:'',intake:'',call:'',comply:'',research:'',crm:'',invoice:''},
+    chat: [
+      {from:'broker', avatar:'CC', text:'Just got off the phone with a new enquiry — Ryan Stafford, small construction business in Brisbane, needs $280k equipment finance. Got his number and email. Keen to move.'}
+    ],
+    outcomes: []
+  },
+  {
+    pills: {primary:'active',finance:'',comms:'',admin:'',intake:'',call:'',comply:'',research:'',crm:'',invoice:''},
+    chat: [
+      {from:'broker', avatar:'CC', text:'Just got off the phone with a new enquiry — Ryan Stafford, small construction business in Brisbane, needs $280k equipment finance. Got his number and email. Keen to move.'},
+      {from:'routing', text:'Primary Agent reads Chris\'s profile + message. Identifies: new lead, equipment finance, Brisbane. Routes tasks to Finance Lead and Comms Lead simultaneously.'},
+    ],
+    outcomes: []
+  },
+  {
+    pills: {primary:'done',finance:'active',comms:'active',admin:'',intake:'',call:'',comply:'',research:'',crm:'',invoice:''},
+    chat: [
+      {from:'broker', avatar:'CC', text:'Just got off the phone with a new enquiry — Ryan Stafford, small construction business in Brisbane, needs $280k equipment finance. Got his number and email. Keen to move.'},
+      {from:'routing', text:'Finance Lead receives: new equipment finance lead, $280k, Brisbane. Breaks into tasks for intake, compliance, and lender research specialists.'},
+      {from:'routing', text:'Comms Lead receives: new contact to log in Pipedrive, initiate call sequence.'},
+    ],
+    outcomes: []
+  },
+  {
+    pills: {primary:'done',finance:'done',comms:'done',admin:'',intake:'fired',call:'fired',comply:'fired',research:'fired',crm:'fired',invoice:''},
+    chat: [
+      {from:'broker', avatar:'CC', text:'Just got off the phone with a new enquiry — Ryan Stafford, small construction business in Brisbane, needs $280k equipment finance. Got his number and email. Keen to move.'},
+      {from:'routing', text:'Specialists working in parallel — all actions complete before response is returned to Chris.'},
+    ],
+    outcomes: [
+      'Ryan Stafford created in Pipedrive',
+      'Deal stage set to NEW',
+      'Acknowledgement SMS queued',
+      'Day 1 AM call reminder set',
+      'Compliance check run — no flags',
+      'Lender shortlist drafted: Pepper, Westpac, Macquarie'
+    ]
+  },
+  {
+    pills: {primary:'active',finance:'done',comms:'done',admin:'',intake:'done',call:'done',comply:'done',research:'done',crm:'done',invoice:''},
+    chat: [
+      {from:'broker', avatar:'CC', text:'Just got off the phone with a new enquiry — Ryan Stafford, small construction business in Brisbane, needs $280k equipment finance. Got his number and email. Keen to move.'},
+      {from:'agent', avatar:'2iC', text:'On it. Here\'s where things are at:\n\nRyan Stafford is in Pipedrive — deal created, staged as New, contact details logged.\n\nCompliance check is clear. For $280k equipment finance with a construction business, you\'ll want 2 years of business financials and proof of ABN. I\'ve noted the outstanding docs in the file.\n\nBased on your profile, your likely shortlist is Pepper Money, Westpac, and Macquarie. I\'ll have a comparison ready once docs are in.\n\nAcknowledgement SMS is queued to Ryan. Your Day 1 AM call reminder is set.\n\nAnything else on this one, or want me to kick off the doc collect sequence once you\'ve made contact?'}
+    ],
+    outcomes: [
+      'Ryan Stafford created in Pipedrive',
+      'Deal stage set to NEW',
+      'Acknowledgement SMS queued',
+      'Day 1 AM call reminder set',
+      'Compliance check run — no flags',
+      'Lender shortlist drafted: Pepper, Westpac, Macquarie'
+    ]
+  }
+];
+
+function goTo(n) {
+  if (n < 0 || n >= steps.length) return;
+  current = n;
+  var s = steps[n];
+
+  document.querySelectorAll('.step-btn').forEach(function(b,i){ b.classList.toggle('active', i===n); });
+
+  Object.keys(s.pills).forEach(function(k){
+    var el = document.getElementById('pill-'+k);
+    if (!el) return;
+    el.className = 'agent-pill' + (s.pills[k] ? ' '+s.pills[k] : '');
+  });
+
+  var body = document.getElementById('chat-body');
+  body.innerHTML = '';
+  s.chat.forEach(function(m){
+    if (m.from === 'routing') {
+      var d = document.createElement('div');
+      d.className = 'routing-note';
+      d.textContent = m.text;
+      body.appendChild(d);
+    } else {
+      var wrap = document.createElement('div');
+      wrap.className = 'msg ' + m.from;
+      var av = document.createElement('div');
+      av.className = 'avatar ' + (m.from==='broker' ? 'av-broker' : 'av-agent');
+      av.textContent = m.avatar;
+      var bub = document.createElement('div');
+      bub.className = 'bubble ' + (m.from==='broker' ? 'bubble-broker' : 'bubble-agent');
+      bub.style.whiteSpace = 'pre-line';
+      bub.textContent = m.text;
+      wrap.appendChild(av);
+      wrap.appendChild(bub);
+      body.appendChild(wrap);
+    }
+  });
+
+  var ob = document.getElementById('outcome-bar');
+  var oi = document.getElementById('outcome-items');
+  if (s.outcomes.length) {
+    ob.style.display = 'block';
+    oi.innerHTML = '';
+    s.outcomes.forEach(function(o){
+      var p = document.createElement('span');
+      p.className = 'outcome-pill';
+      p.textContent = o;
+      oi.appendChild(p);
+    });
+  } else {
+    ob.style.display = 'none';
+  }
+
+  document.getElementById('btn-prev').disabled = n === 0;
+  var nextBtn = document.getElementById('btn-next');
+  nextBtn.disabled = n === steps.length - 1;
+  nextBtn.textContent = n === steps.length - 2 ? 'See response' : n === steps.length - 1 ? 'Done' : 'Next';
+  document.getElementById('step-counter').textContent = 'Step ' + (n+1) + ' of ' + steps.length;
+}
+
+goTo(0);
+</script>
+</body>
+</html>
